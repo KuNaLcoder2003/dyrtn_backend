@@ -1,0 +1,103 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+enum Payment_Status {
+  PAID
+  UNPAID
+}
+
+enum OTP_STATUS {
+  EXPIRED
+  VALID
+}
+
+enum MATERIAL_TYPES {
+  NOTES
+  QUESTIONS
+  PYQ
+}
+model Student {
+  id String @id @default(ulid())
+  email String @unique
+  age String
+  mobile String
+  name String
+  password String @default("")
+  gender String
+  payment Payment_Status
+  created_at DateTime
+  updated_at DateTime
+  batch_id String @unique
+  subjects StudentSubjects[]
+  batch Batch @relation(fields: [batch_id] , references: [id])
+  otp OneTimePass[]
+  account_verified Boolean @default(false)
+}
+
+model Batch {
+  id String @id @default(uuid())
+  batch_name String
+  created_at DateTime
+  updated_at DateTime
+  students Student[]
+  subjects Subjects[]
+}
+
+model Subjects {
+  id String @id @default(ulid())
+  subject_name String
+  created_at DateTime
+  updated_at DateTime
+  batch_id String 
+  batch Batch @relation(fields: [batch_id] , references: [id])
+  students StudentSubjects[]
+  chapters Chapters[]
+}
+
+model Chapters {
+  id String @id @default(ulid())
+  chapter_name String
+  subject_id String
+  subject Subjects @relation(fields: [subject_id] , references: [id])
+  created_at String
+  updated_at String
+  materials Material[]
+}
+
+model Material {
+  id String @id @default(ulid())
+  chapter_id String
+  type MATERIAL_TYPES
+  chapter Chapters @relation(fields: [chapter_id] , references: [id])
+  material_url String
+  cloud_id String
+  created_at String
+  updated_at String
+}
+
+model OneTimePass {
+  id String @id @default(ulid())
+  student_email String
+  student Student @relation(fields: [student_email] , references: [email])
+  otp String
+  created_at DateTime
+  updated_at DateTime
+  status OTP_STATUS
+}
+
+model StudentSubjects {
+  student_id String
+  subject_id String
+  student Student @relation(fields: [student_id] , references: [id])
+  subject Subjects @relation(fields: [subject_id] , references: [id])
+  @@id([student_id , subject_id])
+}
