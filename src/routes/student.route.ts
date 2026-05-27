@@ -1,8 +1,10 @@
-import express, { Router } from "express"
+import express from "express"
 import { createNewStudent } from "../controllers/auth.controller.js";
 import type { Student } from "../utils/types.js";
 import { getErrorWrapper, getSuccessWrapper, STATUS_CODES } from "../config.js";
 import { prisma } from "../utils/db.js";
+import { authMiddleWare } from "../middlewares/authMiddleware.js";
+import { getStudentsProfileDetails } from "../controllers/student.controller.js";
 
 const studentRouter = express.Router()
 
@@ -57,5 +59,24 @@ studentRouter.post('/register', async (req: express.Request, res: express.Respon
         return
     }
 })
+
+
+studentRouter.get('/me', authMiddleWare, async (req: any, res: express.Response) => {
+
+    try {
+        const email = req.email;
+        const { obj, valid } = await getStudentsProfileDetails(email)
+        if (!valid) {
+            res.status(STATUS_CODES.NOT_FOUND).json(obj)
+            return
+        }
+        res.status(STATUS_CODES.OK).json(obj)
+    } catch (error) {
+        const errorObject = getErrorWrapper("ERR_500", `Internal Server Error : ${error}`)
+        res.status(STATUS_CODES.SERVER_ERROR).json(errorObject)
+        return
+    }
+})
+
 
 export default studentRouter;
